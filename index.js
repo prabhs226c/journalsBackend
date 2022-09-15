@@ -10,6 +10,6 @@ app.use("",base_route)
 app.use("/auth",authRoutes)
 
 app.listen(PORT,()=>{
-    console.log(`Listening at PORT: ${PORT}`)
+    console.log(`Listening at PORT : ${PORT}`)
 })
 
