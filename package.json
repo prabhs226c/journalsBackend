@@ -22,6 +22,8 @@
   },
   "homepage": "https://github.com/prabhs226c/Callout-node#readme",
   "dependencies": {
+    "@mysql/xdevapi": "8.0.30",
+    "bcrypt": "^5.0.1",
     "dotenv": "^16.0.2",
     "express": "^4.18.1",
     "fetch": "^1.1.0",
