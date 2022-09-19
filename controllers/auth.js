@@ -35,7 +35,6 @@ async function registerUser(req,res)
 async function loginUser(req,res){
     const EMAIL = req.body.email;
     const PASSWORD = req.body.password;
-
     const FORM_ERRORS = {};
 
     /** verify login form */
@@ -58,23 +57,6 @@ async function loginUser(req,res){
         }
     }
 }
-
-async function switchTheme(req,res)
-{
-    const USER_ID = req.user.id;
-    const NEW_VALUE = req.body.theme;
-
-    const SESSION = await getMysqlSession();
-    const TABLE   = await SESSION.getSchema(process.env.DB_NAME).getTable(process.env.USERS_TABLE);
-    const QUERY   = await TABLE.update().set('dark_theme',NEW_VALUE).where('id = :v').bind('v',USER_ID).execute();
-    if(QUERY.getAffectedItemsCount() === 0) return res.json({hasError:true,errorType:'unknown',errors:{msg:"Something went wrong. Try again"}});
-
-    const TOKEN_PAYLOAD = {id:req.user.id,name:req.user.name,darkTheme:NEW_VALUE};
-    const ACCESS_TOKEN = jwt.sign(TOKEN_PAYLOAD,process.env.ACCESS_TOKEN_SECRET);
-
-    return res.status(200).json({hasErrors:false,access_token:ACCESS_TOKEN});
-}
-
 
 async function getUser(email)
 {
@@ -102,4 +84,4 @@ async function saveUser(name,email,password)
     return ROW_INSERTED.getAffectedItemsCount() > 0;
 }
 
-export {registerUser,loginUser,switchTheme}
+export {registerUser,loginUser}

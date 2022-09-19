@@ -1,2 +1,3 @@
-# Callout-node
- backend for callout app written in node.js
+# Node.js server
+ - run "npm install to install dependencies"
+ - run "npm start" to run

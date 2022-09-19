@@ -2,7 +2,7 @@ import getMysqlSession from "../Database/mysqlSession.js";
 
 async function getJournals(req,res)
 {
-    const SQL = `SELECT ${process.env.JOURNALS_TABLE}.id,title,description,quote,author,date(journal_created) as journal_date, time(journal_created) as journal_time FROM ${process.env.DB_NAME}.${process.env.JOURNALS_TABLE} join ${process.env.DB_NAME}.${process.env.QUOTES_TABLE} on ${process.env.QUOTES_TABLE}.id = ${process.env.JOURNALS_TABLE}.quote_id order by ${process.env.JOURNALS_TABLE}.id desc`;
+    const SQL = `SELECT ${process.env.JOURNALS_TABLE}.id,title,user_id,quote,name,author,journal_created FROM ${process.env.DB_NAME}.${process.env.JOURNALS_TABLE} join ${process.env.DB_NAME}.${process.env.QUOTES_TABLE} on ${process.env.QUOTES_TABLE}.id = ${process.env.JOURNALS_TABLE}.quote_id join ${process.env.DB_NAME}.${process.env.USERS_TABLE} on ${process.env.USERS_TABLE}.id = ${process.env.JOURNALS_TABLE}.user_id order by ${process.env.JOURNALS_TABLE}.id desc`;
 
     const ROWS    = await executeMysqlQuery(SQL);
     const COLUMNS   = ROWS.getColumns();
@@ -101,14 +101,14 @@ async function saveJournal(req,res)
             COLUMN_LABELS.push(column.getColumnLabel());
         });
 
-        return res.code(200).json({hasErrors:false,data:JOURNAL,fields:COLUMN_LABELS});
+        return res.status(200).json({hasErrors:false,data:JOURNAL,fields:COLUMN_LABELS});
     }
 }
 
 async function updateJournal(req,res)
 {
     const USER_ID = req.user.id;
-    const JOURNAL_ID = req.body.id;
+    const JOURNAL_ID = req.params.id;
     const TITLE = req.body.title;
     const DESCRIPTION = req.body.description;
 
@@ -119,9 +119,11 @@ async function updateJournal(req,res)
 
     if(Object.keys(ERRORS).length > 0) return res.json({hasErrors:true,errorType:"formError",errors:ERRORS});
 
-    const JOURNAL = await getJournal(JOURNAL_ID);
+    const ROWS_OLD = await getJournal(JOURNAL_ID);
+    const JOURNAL = ROWS_OLD.fetchOne();
     if(!JOURNAL) return res.json({hasErrors:true,errorType:"journalNotFound",errors:{msg:"Journal not found"}});
-    if(JOURNAL[1] !== USER_ID) return res.status(200).json({hasErrors:true,errorType:"notAllowed",errors:{msg:"You are not allowed to delete this journal"}});
+    console.log(JOURNAL, USER_ID)
+    if(JOURNAL[1] != USER_ID) return res.status(200).json({hasErrors:true,errorType:"notAllowed",errors:{msg:"You are not allowed to update this journal"}});
 
     const SESSION = await getMysqlSession();
     const TABLE = await SESSION.getSchema(process.env.DB_NAME).getTable(process.env.JOURNALS_TABLE);
@@ -129,7 +131,7 @@ async function updateJournal(req,res)
         .set('title',TITLE).set('description',DESCRIPTION)
         .where('id = :v').bind('v',JOURNAL_ID)
         .execute();
-    if(UPDATE.getAffectedItemsCount() > 0) return res.status(200).json({hasErrors:true,errorType:'unknown',errors:{msg:"Something went wrong. try again."}});
+
     const UPDATED_JOURNAL = await getJournal(JOURNAL_ID);
     const ROWS = UPDATED_JOURNAL.fetchOne();
     const COLUMNS = UPDATED_JOURNAL.getColumns();
